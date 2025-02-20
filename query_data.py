@@ -1,4 +1,3 @@
-import asyncio
 import argparse
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -16,6 +15,10 @@ if not GROQ_API_KEY:
     print("Error: GROQ_API_KEY not found in environment variables")
     sys.exit(1)
 
+#DB That Wipes when you run create_database.py
+# CHROMA_PATH = "chroma"
+
+#DB That has all the mdx's already stored
 CHROMA_PATH = "AllDocsDB/chroma"
 
 PROMPT_TEMPLATE = """
@@ -48,19 +51,17 @@ def query_groq(prompt, model_name="mixtral-8x7b-32768"):
             error_msg += f"\n- {model}"
         raise Exception(error_msg)
 
-async def query(query_text=""):
+def query(query_text=""):
     embedding_function = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
-    
-    # Use asyncio to run the Chroma similarity search asynchronously (if possible, offload to thread)
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
-    # Perform similarity search (This might be blocking and should be async or offloaded)
-    results = await asyncio.to_thread(db.similarity_search_with_relevance_scores, query_text, k=3, score_threshold=.5)
+    # Perform similarity search
+    results = db.similarity_search_with_relevance_scores(query_text, k=3, score_threshold=.5)
     
     if not results:
-        prompt = query_text + ", give a short answer"
+        prompt = query_text
     else:
         # Build context from search results
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _ in results])
@@ -69,10 +70,24 @@ async def query(query_text=""):
 
     print("\nGenerated Prompt:", prompt)
 
-    # Query Groq (This can also be blocking, offloading to thread)
-    response_text = await asyncio.to_thread(query_groq, prompt, model_name="mixtral-8x7b-32768")
+    # Query Groq
+    response_text = query_groq(prompt, model_name="mixtral-8x7b-32768")
 
     # Extract sources from metadata
     sources = [doc.metadata.get("source", "Unknown") for doc, _ in results]
     formatted_response = f"\nResponse:\n{response_text.content}\n\nSources: {sources}"
     return formatted_response
+    
+def main():
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("query_text", type=str, help="The query text.")
+        args = parser.parse_args()
+        query_text = args.query_text
+        print(query(query_text))
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
