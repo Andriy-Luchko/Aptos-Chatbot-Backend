@@ -9,6 +9,10 @@ async def test_websocket():
         await ws.send(message)
         response = await ws.recv()
         print(f"received: {response}")
+        message = "what is my name"
+        await ws.send(message)
+        response = await ws.recv()
+        print(f"received: {response}")
 
 for i in range(1):
     asyncio.run(test_websocket())

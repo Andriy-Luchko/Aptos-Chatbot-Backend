@@ -58,16 +58,15 @@ def query(query_text=""):
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Perform similarity search
-    results = db.similarity_search_with_relevance_scores(query_text, k=3)
+    results = db.similarity_search_with_relevance_scores(query_text, k=3, score_threshold=.5)
     
     if not results:
-        print("No relevant results found in the database.")
-        return
-
-    # Build context from search results
-    context_text = "\n\n---\n\n".join([doc.page_content for doc, _ in results])
-    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-    prompt = prompt_template.format(context=context_text, question=query_text)
+        prompt = query_text
+    else:
+        # Build context from search results
+        context_text = "\n\n---\n\n".join([doc.page_content for doc, _ in results])
+        prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+        prompt = prompt_template.format(context=context_text, question=query_text)
 
     print("\nGenerated Prompt:", prompt)
 
