@@ -1,6 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing import Dict, List, Tuple
 from query_data import query
+from typing import Dict
+from query_data import query  # Ensure query is now async
 import uuid
 
 
@@ -33,6 +35,7 @@ async def handle_websocket(conversation_id: str, websocket: WebSocket):
             history.append(f"Bot: {bot_response}")
 
             await websocket.send_text(bot_response)
+            
     except WebSocketDisconnect:
         del conversations[conversation_id]
         print(f"Conversation {conversation_id} closed.")
@@ -58,6 +61,7 @@ async def websocket_endpoint(websocket: WebSocket):
     print(f"Conversation ID generated: {conversation_id}")
     
     await handle_websocket(conversation_id, websocket)
+
 @app.get("/active_conversations")
 async def get_active_conversations():
     return {"active_conversations": list(conversations.keys())}
