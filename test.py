@@ -5,14 +5,18 @@ FASTAPI_SERVER = "ws://localhost:8000/ws"
 
 async def test_websocket():
     async with websockets.connect(FASTAPI_SERVER) as ws:
-        message = "how to install aptos cli"
-        await ws.send(message)
-        response = await ws.recv()
-        print(f"received: {response}")
-        message = "what is my name"
-        await ws.send(message)
-        response = await ws.recv()
-        print(f"received: {response}")
+        messages = [
+            "I am using macos",
+            "I prefer to use windows",
+            "how do i install up aptos cli on my system?",
+        ]
+        
+        for message in messages:
+            await ws.send(message)
+            response = await ws.recv()
+            print(f"Sent: {message}")
+            print(f"Received: {response}")
+
 
 for i in range(1):
     asyncio.run(test_websocket())
