@@ -39,8 +39,6 @@ async def handle_websocket(conversation_id: str, websocket: WebSocket):
     except WebSocketDisconnect:
         del conversations[conversation_id]
         print(f"Conversation {conversation_id} closed.")
-    finally:
-        websocket.close()
 
 
 @app.get("/conversation_history/{conversation_id}")

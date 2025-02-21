@@ -7,8 +7,8 @@ async def test_websocket():
     async with websockets.connect(FASTAPI_SERVER) as ws:
         messages = [
             "I am using macos",
-            "My name is kyle",
-            "what is my name"
+            "I do not like windows",
+            "What is the system i am using"
         ]
         
         for message in messages:

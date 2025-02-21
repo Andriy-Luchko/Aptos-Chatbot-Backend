@@ -48,7 +48,10 @@ def query_groq(prompt, model_name="mixtral-8x7b-32768"):
             error_msg += f"\n- {model}"
         raise Exception(error_msg)
 
-async def query(query_text=""):
+def query(query_text=""):
+    embedding_function = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
     embedding_function = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
@@ -57,7 +60,7 @@ async def query(query_text=""):
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Perform similarity search (This might be blocking and should be async or offloaded)
-    results = await asyncio.to_thread(db.similarity_search_with_relevance_scores, query_text, k=3, score_threshold=.5)
+    results = db.similarity_search_with_relevance_scores(query_text, k=3, score_threshold=.5)
     
     if not results:
         prompt = query_text + ", give a short answer"
@@ -66,11 +69,12 @@ async def query(query_text=""):
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _ in results])
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
         prompt = prompt_template.format(context=context_text, question=query_text)
+        
 
     print("\nGenerated Prompt:", prompt)
 
-    # Query Groq (This can also be blocking, offloading to thread)
-    response_text = await asyncio.to_thread(query_groq, prompt, model_name="mixtral-8x7b-32768")
+
+    response_text = query_groq(prompt, model_name="mixtral-8x7b-32768")
 
     # Extract sources from metadata
     sources = [doc.metadata.get("source", "Unknown") for doc, _ in results]
