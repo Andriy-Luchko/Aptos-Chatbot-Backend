@@ -43,6 +43,7 @@ async def handle_websocket(conversation_id: str, websocket: WebSocket):
 
 @app.get("/conversation_history/{conversation_id}")
 async def get_conversation_history(conversation_id: str):
+    print("im getting called")
     """Retrieve the stored conversation history for a given conversation ID."""
     if conversation_id in conversations:
         _, history = conversations[conversation_id]

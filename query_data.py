@@ -61,16 +61,31 @@ def query(query_text=""):
 
     # Perform similarity search (This might be blocking and should be async or offloaded)
     results = db.similarity_search_with_relevance_scores(query_text, k=3, score_threshold=.5)
-    
+    prompt = "You are a chatbot to answer questions related to developer documentations for Aptos."
     if not results:
-        prompt = query_text + ", give a short answer"
+        prompt += query_text + ", give a short answer."
     else:
         # Build context from search results
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _ in results])
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-        prompt = prompt_template.format(context=context_text, question=query_text)
+        prompt += prompt_template.format(context=context_text, question=query_text)
         
 
+    prompt += '''Generate a response to the following user query in clear and concise language.
+
+Then, create exactly three follow-up questions that help the user can ask the bot again to better understand the topic.
+
+Your response **must** be formatted as **valid JSON** with the **exact** structure shown below and don't add any additional fields:
+
+```json
+{
+  "response": "<your_answer_here>",
+  "questions": [
+    "<follow_up_question_1>",
+    "<follow_up_question_2>",
+    "<follow_up_question_3>"
+  ]
+}'''
     print("\nGenerated Prompt:", prompt)
 
 
@@ -78,5 +93,5 @@ def query(query_text=""):
 
     # Extract sources from metadata
     sources = [doc.metadata.get("source", "Unknown") for doc, _ in results]
-    formatted_response = f"\nResponse:\n{response_text.content}\n\nSources: {sources}"
-    return formatted_response
+    formatted_response = f"{response_text.content}"
+    return formatted_response   
