@@ -6,9 +6,8 @@ FASTAPI_SERVER = "ws://localhost:8000/ws"
 async def test_websocket():
     async with websockets.connect(FASTAPI_SERVER) as ws:
         messages = [
-            "I am using macos",
-            "My name is kyle",
-            "what is my name"
+            "What is an AggregatorFactory? ",
+            "What is the purpose of an AggregatorFactory? ",
         ]
         
         for message in messages:
